@@ -1,5 +1,45 @@
-This is a wrapper of json parser, base on gason.
+It is easy to use!
 
-			by swift
-		    2016.05.16
-			
+take the json string bellow for example:
+string strJson = R"({"name":"swift", "age":35, "sex":"male", "phones": ["+8613011111111","+8613022222222","+8613033333333"], "friends":[{"name":"mikel", "age":33, "sex":"male", "phones":["+8613311111111", "+8613322222222"]},{"name":"lili", "age":25, "sex":"female", "phones":["+8613611111111", "+8613622222222"]}]})";
+
+1. create object:
+bool bOk = false; jsonparse parse(strJson, bOk); 
+if (!bOk){ cout << "Parse json fail! json string: " << strJson << endl; return -1; }
+
+2. get the "name", "age", and other fields:
+string name; 
+int64_t age; 
+bOk = parse.GetString("name", name); 
+if (bOk) cout << "name:\t" << name << endl; else cout << "parse \"name\" error!" << endl; 
+bOk = parse.GetInt("age", age); 
+if (bOk) cout << "age:\t" << age << endl; else cout << "parse \"age\" error!" << endl;
+
+3. get outer the array "phones":
+vector<string> vePhones; 
+bOk = parse.GetStringArray("phones", vePhones);
+
+or get each element one by one: 
+string elm0, elm1, eml2; 
+bOk = parse.GetString(jsonparse::MakeKeys("phones","0"), elm0);
+bOk = parse.GetString(jsonparse::MakeKeys("phones","1"), elm1); 
+bOk = parse.GetString(jsonparse::MakeKeys("phones","2"), elm2);
+
+4. get inner array "phones":
+first, you need to know how many friends "swift" has: 
+int64_t iFrds = 0; 
+parse.GetInt("age", iFrds);
+
+second, get the "phones" for each friend: 
+vector<string> frdphones; 
+for(int i=0; i<(int)iFrds; i++){ 
+	char szIndex[10] = { 0 }; 
+	itoa((int)i, szIndex, 10); 
+	parse.GetStringArray(jsonparse::MakeKeys("friends", szIndex, "phones"), frdphones); 
+}
+
+5. how to get the phone "+8613311111111" and "+8613622222222"?
+string phone111, phone222; 
+parse.GetStringArray(jsonparse::MakeKeys("friends", "0", "phones", "0"), phone111); 
+parse.GetStringArray(jsonparse::MakeKeys("friends", "1", "phones", "1"), phone222);
+
