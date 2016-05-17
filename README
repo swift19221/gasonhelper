@@ -28,7 +28,7 @@ bOk = parse.GetString(jsonparse::MakeKeys("phones","2"), elm2);
 4. get inner array "phones":
 first, you need to know how many friends "swift" has: 
 int64_t iFrds = 0; 
-parse.GetInt("age", iFrds);
+parse.GetInt("friends", iFrds);
 
 second, get the "phones" for each friend: 
 vector<string> frdphones; 
