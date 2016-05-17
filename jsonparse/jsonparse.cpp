@@ -19,7 +19,7 @@ jsonparse::jsonparse(const string& strJson, bool& bOk) :m_bParseOk(false)
 	JsonAllocator allocator;
 
 	string strJson_ = strJson;
-	m_bParseOk = (JSON_OK == jsonParse((char*)strJson_.c_str(), &endptr, &value, allocator));
+	bOk = m_bParseOk = (JSON_OK == jsonParse((char*)strJson_.c_str(), &endptr, &value, allocator));
 	if (m_bParseOk)
 	{
 		vector<string> keys;
@@ -65,6 +65,8 @@ void jsonparse::ParseObject(JsonValue o, vector<string>& veKeys)
 			}
 
 			//remember array size
+			printf("key: %s\n", JoinKeys(veKeys).c_str());
+			printf("value: %d\n", iIndex);
 			val.vType = flag_number;
 			val.fValue = (double)iIndex;
 			m_mpValues.insert(make_pair(JoinKeys(veKeys), val));
@@ -117,30 +119,54 @@ JValue jsonparse::GetValue(const vector<string>& veKeys)
 
 vector<JValue> jsonparse::GetValueArray(const vector<string>& veKeys)
 {
+	bool bOk = false;
+	int64_t iUbound = 0;
 	vector<JValue> val;
+	vector<string> veKeys_;
+
 	if (!m_bParseOk)
 		return val;
 
+	//is it the style ? ==> {"arr":["v1","v2"]}
+	//calling: GetValueArray("arr", veArr), return ["v1","v2"];
+	bOk = GetInt(veKeys, iUbound);
+	if (bOk){
+		veKeys_ = veKeys;
+		for (int i = 0; i < (int)iUbound; i++){
+			char szIndex[10] = { 0 };
+			itoa(i, szIndex, 10);
+			veKeys_.push_back(szIndex);
+			JValue v = GetValue(veKeys_);
+			if (v.vType != flag_null)
+				val.push_back(v);
+			veKeys_.pop_back();
+		}
+
+		return val;
+	}
+
+	//is it the style ? ==> {"arr":[{"k1":"v1","k2":"v2"}, {"k1":"v11","k2":"v22"}]}
+	//calling: GetValueArray(MakeKeys("arr","k1"), veArr)), return ["v1","v11"];
 	if (veKeys.size() < 2)
 		return val;
-	vector<string> veKeys_ = veKeys;
+	veKeys_ = veKeys;
 	veKeys_.pop_back();
-	int64_t iUbound = 0;
-	bool bOk = GetInt(veKeys_, iUbound);
-	if (!bOk || iUbound < 1)
-		return val;
+	bOk = GetInt(veKeys_, iUbound);
+	if (bOk){
+		string strLastKey = veKeys.at(veKeys.size() - 1);
+		for (int i = 0; i < (int)iUbound; i++){
+			char szIndex[10] = { 0 };
+			itoa(i, szIndex, 10);
+			veKeys_.push_back(szIndex);
+			veKeys_.push_back(strLastKey);
+			JValue v = GetValue(veKeys_);
+			if (v.vType != flag_null)
+				val.push_back(v);
+			veKeys_.pop_back();
+			veKeys_.pop_back();
+		}
 
-	string strLastKey = veKeys.at(veKeys.size() - 1);
-	for (int i = 0; i < (int)iUbound; i++){
-		char szIndex[10] = { 0 };
-		itoa(i, szIndex, 10);
-		veKeys_.push_back(szIndex);
-		veKeys_.push_back(strLastKey);
-		JValue v = GetValue(veKeys_);
-		if (v.vType != flag_null)
-			val.push_back(v);
-		veKeys_.pop_back();
-		veKeys_.pop_back();
+		return val;
 	}
 
 	return val;
