@@ -9,9 +9,17 @@
 using namespace std;
 
 #ifdef _DEBUG
+#ifdef x64
+#pragma comment(lib, "../x64/debug/jsonparse.lib")
+#else
 #pragma comment(lib, "../debug/jsonparse.lib")
+#endif
+#else
+#ifdef x64
+#pragma comment(lib, "../x64/release/jsonparse.lib")
 #else
 #pragma comment(lib, "../release/jsonparse.lib")
+#endif
 #endif
 
 int _tmain(int argc, _TCHAR* argv[])
@@ -77,6 +85,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		cout << endl;
 	}
+
+	system("pause");
 
 	return 0;
 }
